@@ -1,6 +1,6 @@
 # RouteOptima — SA vs Tabu Search TSP Dashboard
 
-Aplikasi web interaktif untuk membandingkan kinerja algoritma metaheuristik **Simulated Annealing (SA)** dan **Tabu Search (TS)** dalam menyelesaikan permasalahan *Traveling Salesman Problem* (TSP). Disusun untuk memenuhi penugasan Mata Kuliah Metode Optimasi Metaheuristik.
+Aplikasi web *dashboard* analitik interaktif untuk membandingkan kinerja algoritma metaheuristik **Simulated Annealing (SA)** dan **Tabu Search (TS)** dalam menyelesaikan permasalahan *Traveling Salesman Problem* (TSP). Proyek ini dikembangkan untuk memenuhi penugasan Mata Kuliah Metode Optimasi Metaheuristik.
 
 ## 🌐 Akses Aplikasi (Live Demo)
 Aplikasi telah di-*deploy* ke *cloud server* dan dapat diakses secara langsung tanpa instalasi melalui tautan berikut:
@@ -47,20 +47,43 @@ Aplikasi telah di-*deploy* ke *cloud server* dan dapat diakses secara langsung t
 
 ---
 
-## 💻 Cara Menjalankan Secara Lokal (Local Development)
+## 💻 Panduan Instalasi & Cara Menjalankan Secara Lokal (Local Development)
 
-Jika ingin menjalankan proyek ini di komputer lokal (Localhost):
+Jika Anda ingin mengunduh dan menjalankan proyek ini di komputer lokal (*localhost*), ikuti langkah-langkah di bawah ini:
 
-### 1. Menjalankan Backend (Python FastAPI)
-Pastikan Python sudah terinstal, lalu jalankan perintah berikut di terminal:
+### Prasyarat Sistem
+* **Python** (versi 3.8 atau yang lebih baru) terinstal di sistem.
+* **Node.js** (versi 18 atau yang lebih baru) beserta manajer paket **npm** terinstal di sistem.
+
+### Langkah 1: Mendapatkan Salinan Proyek
+Unduh proyek dengan melakukan *clone* dari repositori GitHub menggunakan terminal / Command Prompt:
 ```bash
-pip install -r requirements.txt
-uvicorn api.index:app --reload --port 8000
+git clone [https://github.com/rayvanguevhara/Project-Optimasi-Metaheuristik.git](https://github.com/rayvanguevhara/Project-Optimasi-Metaheuristik.git)
+cd Project-Optimasi-Metaheuristik
 ```
+*(Atau unduh file arsip dalam bentuk `.zip` dari GitHub, lalu ekstrak ke folder pilihan Anda dan buka direktorinya melalui terminal).*
 
-### 2. Menjalankan Frontend (React + Vite)
-Buka terminal baru di direktori utama proyek, lalu jalankan:
-```bash
-npm install
-npm run dev
-```
+### Langkah 2: Menjalankan Sisi Backend (Python FastAPI)
+1. Masuk ke direktori utama proyek (jika belum berada di sana).
+2. Instal pustaka (*libraries*) Python yang dibutuhkan dengan menjalankan perintah:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Jalankan server *backend* menggunakan Uvicorn agar API dapat merespons permintaan dari *frontend*:
+   ```bash
+   uvicorn api.index:app --reload --port 8000
+   ```
+   *Backend* kini aktif dan berjalan di `http://localhost:8000`.
+
+### Langkah 3: Menjalankan Sisi Frontend (React + Vite / TanStack Router)
+1. Buka jendela **terminal baru** (biarkan terminal *backend* tetap berjalan di latar belakang).
+2. Pastikan Anda berada di direktori utama proyek yang sama.
+3. Instal dependensi *frontend* menggunakan npm:
+   ```bash
+   npm install
+   ```
+4. Jalankan server *development frontend*:
+   ```bash
+   npm run dev
+   ```
+5. Terminal akan menampilkan tautan lokal (biasanya `http://localhost:5173` atau `http://localhost:3000`). Buka tautan tersebut melalui peramban (*browser*) untuk mengakses aplikasi secara penuh.
