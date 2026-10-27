@@ -42,15 +42,11 @@ function createRandomDistanceMatrix(n: number): number[][] {
     y: Math.random() * 90 + 5,
   }));
 
-  const matrix: number[][] = Array.from({ length: n }, () => Array(n).fill(0));
-  for (let i = 0; i < n; i++) {
-    for (let j = i + 1; j < n; j++) {
-      const dist = Math.max(5, Math.round(Math.hypot(coords[i].x - coords[j].x, coords[i].y - coords[j].y)));
-      matrix[i][j] = dist;
-      matrix[j][i] = dist;
-    }
-  }
-  return matrix;
+  return coords.map((c1, i) =>
+    coords.map((c2, j) =>
+      i === j ? 0 : Math.max(5, Math.round(Math.hypot(c1.x - c2.x, c1.y - c2.y)))
+    )
+  );
 }
 
 // Komponen Pembungkus Form Field
