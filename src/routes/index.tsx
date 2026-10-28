@@ -143,12 +143,12 @@ function Index() {
     init: "NN",
     local: "2OPT",
     start: 0,
-    temp: 10000,
-    alpha: 0.99,
-    saIter: 15000,
+    temp: 200,
+    alpha: 0.95,
+    saIter: 100,
     tenure: 5,
     tsIter: 100,
-    multiStartRuns: 3,
+    multiStartRuns: 1,
     multiStartSeed: 42,
     adaptiveSearch: false,
     earlyStopPatience: 0,
@@ -273,11 +273,18 @@ function Index() {
                     <h4 className="font-bold text-[#8DA4BA] mb-1">3. Parameter Simulated Annealing (SA)</h4>
                     <ul className="list-disc pl-5 space-y-1">
                       <li><strong>Initial Temp:</strong> Suhu awal. Semakin tinggi, algoritma lebih sering menerima rute buruk di awal untuk keluar dari <em>local optimum</em>.</li>
-                      <li><strong>Cooling Rate (Alpha):</strong> Laju penurunan suhu. Direkomendasikan mendekati 1 (contoh: 0.99).</li>
+                      <li><strong>Cooling Rate (Alpha):</strong> Laju penurunan suhu. Direkomendasikan mendekati 1 (contoh: 0.95 - 0.99).</li>
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#8DA4BA] mb-1">4. Parameter Tabu Search (TS)</h4>
+                    <h4 className="font-bold text-[#8DA4BA] mb-1">4. Adaptive Search & Early Stop</h4>
+                    <ul className="list-disc pl-5 space-y-1">
+                      <li><strong>Adaptive Search:</strong> Mengaktifkan reheating SA, diversifikasi TS, dan peningkatan kekuatan perturbasi ILS saat pencarian stagnan.</li>
+                      <li><strong>Early Stop Patience:</strong> Menghentikan satu run ketika tidak ada solusi terbaik baru selama jumlah iterasi yang ditentukan. Nilai 0 menonaktifkan penghentian dini dan menjalankan seluruh budget.</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#8DA4BA] mb-1">5. Parameter Tabu Search (TS)</h4>
                     <ul className="list-disc pl-5 space-y-1">
                       <li><strong>Tabu Tenure:</strong> Masa berlaku memori (Tabu List). Menentukan berapa iterasi sebuah langkah perbaikan dilarang digunakan kembali.</li>
                     </ul>
@@ -446,6 +453,62 @@ function Index() {
                       <SelectItem value="3OPT">3-Opt (3OPT)</SelectItem>
                     </SelectContent>
                   </Select>
+                </Field>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Multi-Start Runs (1–5)">
+                    <Input
+                      type="number"
+                      min={1}
+                      max={5}
+                      value={p.multiStartRuns}
+                      onChange={set("multiStartRuns")}
+                    />
+                  </Field>
+                  <Field label="Multi-Start Seed">
+                    <Input
+                      type="number"
+                      value={p.multiStartSeed}
+                      onChange={set("multiStartSeed")}
+                    />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <Field label="Adaptive Search">
+                    <Select
+                      value={p.adaptiveSearch ? "on" : "off"}
+                      onValueChange={(v) => setP({ ...p, adaptiveSearch: v === "on" })}
+                    >
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="on">Enabled</SelectItem>
+                        <SelectItem value="off">Disabled (baseline)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                  <Field label="Early Stop Patience (0 = off)">
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100000}
+                      value={p.earlyStopPatience}
+                      onChange={set("earlyStopPatience")}
+                    />
+                  </Field>
+                </div>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  Adaptive Search melakukan reheating/diversifikasi saat pencarian stagnan. Early Stop menghentikan tiap run setelah jumlah iterasi tanpa solusi terbaik baru mencapai nilai patience; 0 berarti seluruh budget iterasi tetap digunakan.
+                </p>
+                <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  Set 1 untuk baseline satu percobaan, atau 2–5 untuk mencoba beberapa rute awal dan mempertahankan solusi terbaik.
+                </p>
+                <Field label="Start Node Index">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={dataMode === "random" ? Math.max(0, numCitiesInput - 1) : undefined}
+                    value={p.start}
+                    onChange={set("start")}
+                  />
                 </Field>
               </TabsContent>
 
