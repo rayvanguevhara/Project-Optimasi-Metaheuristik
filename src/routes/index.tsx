@@ -29,7 +29,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "RouteOptima — Metaheuristic TSP Dashboard" },
-      { name: "description", content: "Compare Simulated Annealing and Tabu Search for the Traveling Salesman Problem." },
+      { name: "description", content: "Compare Simulated Annealing, Tabu Search, and Iterated Local Search for the Traveling Salesman Problem." },
     ],
   }),
   component: Index,
@@ -139,22 +139,28 @@ function Index() {
   const [file, setFile] = useState<File | null>(null);
   const [mapView, setMapView] = useState<"sa" | "ts">("sa");
 
-  // Parameter yang ditampilkan di UI hanya parameter inti tugas.
-  // Parameter pendukung disetel tetap di fungsi run() agar kompatibel dengan backend.
   const [p, setP] = useState({
     init: "NN",
     local: "2OPT",
+    start: 0,
     temp: 10000,
     alpha: 0.99,
     saIter: 15000,
     tenure: 5,
     tsIter: 100,
+    multiStartRuns: 3,
+    multiStartSeed: 42,
+    adaptiveSearch: false,
+    earlyStopPatience: 0,
   });
 
   // Perbarui matriks acak secara otomatis saat pengguna mengubah jumlah kota
   useEffect(() => {
     const validN = Math.max(3, Math.min(60, numCitiesInput || 30));
     setRandomMatrix(createRandomDistanceMatrix(validN));
+    if (p.start >= validN) {
+      setP((prev) => ({ ...prev, start: 0 }));
+    }
   }, [numCitiesInput]);
 
   const handleRegenerateMatrix = () => {
@@ -187,18 +193,17 @@ function Index() {
 
     fd.append("init_method", p.init);
     fd.append("ls_method", p.local);
-    // Parameter pendukung tetap dikirim dengan nilai tetap untuk menjaga kompatibilitas API.
-    fd.append("start_node", "0");
+    fd.append("start_node", String(p.start));
     fd.append("sa_initial_temp", String(p.temp));
     fd.append("sa_alpha", String(p.alpha));
     fd.append("sa_max_iter", String(p.saIter));
     fd.append("ts_tabu_tenure", String(p.tenure));
     fd.append("ts_max_iter", String(p.tsIter));
     fd.append("ils_max_iter", "50");
-    fd.append("multi_start_runs", "3");
-    fd.append("multi_start_seed", "42");
-    fd.append("adaptive_search", "false");
-    fd.append("early_stop_patience", "0");
+    fd.append("multi_start_runs", String(Math.max(1, Math.min(5, p.multiStartRuns))));
+    fd.append("multi_start_seed", String(p.multiStartSeed));
+    fd.append("adaptive_search", String(p.adaptiveSearch));
+    fd.append("early_stop_patience", String(Math.max(0, p.earlyStopPatience)));
 
     try {
       const apiUrl = import.meta.env.DEV
@@ -569,6 +574,16 @@ function ResultCard({ title, colorCode, r }: { title: string; colorCode: string;
         <CardTitle className="text-3xl font-extrabold text-[#34495E]">{r.best_distance.toLocaleString()}</CardTitle>
         <p className="flex items-center gap-1 text-xs font-medium text-[#8DA4BA]">
           <Clock className="h-3 w-3" />Execution Time: {r.time_seconds.toFixed(4)}s
+        </p>
+        <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
+          <Shuffle className="h-3 w-3" />
+          {Number((r as any).num_starts ?? 1)} start(s) · Best run #{Number((r as any).best_run ?? 1)}
+        </p>
+        <p className="text-[11px] font-medium text-muted-foreground">
+          {Number((r as any).total_iterations_completed ?? (r as any).iterations_completed ?? 0)} iterations · {Number((r as any).total_diversification_events ?? (r as any).diversification_events ?? 0)} diversification event(s)
+        </p>
+        <p className="text-[11px] font-medium text-muted-foreground">
+          Best run stop: {String((r as any).stop_reason ?? "max_iter")}
         </p>
       </CardHeader>
       <CardContent>
