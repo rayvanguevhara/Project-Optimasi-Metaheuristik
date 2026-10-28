@@ -29,7 +29,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "RouteOptima — Metaheuristic TSP Dashboard" },
-      { name: "description", content: "Compare Simulated Annealing, Tabu Search, and Iterated Local Search for the Traveling Salesman Problem." },
+      { name: "description", content: "Compare Simulated Annealing and Tabu Search for the Traveling Salesman Problem." },
     ],
   }),
   component: Index,
@@ -139,28 +139,22 @@ function Index() {
   const [file, setFile] = useState<File | null>(null);
   const [mapView, setMapView] = useState<"sa" | "ts">("sa");
 
+  // Parameter yang ditampilkan di UI hanya parameter inti tugas.
+  // Parameter pendukung disetel tetap di fungsi run() agar kompatibel dengan backend.
   const [p, setP] = useState({
     init: "NN",
     local: "2OPT",
-    start: 0,
     temp: 10000,
     alpha: 0.99,
     saIter: 15000,
     tenure: 5,
     tsIter: 100,
-    multiStartRuns: 3,
-    multiStartSeed: 42,
-    adaptiveSearch: false,
-    earlyStopPatience: 0,
   });
 
   // Perbarui matriks acak secara otomatis saat pengguna mengubah jumlah kota
   useEffect(() => {
     const validN = Math.max(3, Math.min(60, numCitiesInput || 30));
     setRandomMatrix(createRandomDistanceMatrix(validN));
-    if (p.start >= validN) {
-      setP((prev) => ({ ...prev, start: 0 }));
-    }
   }, [numCitiesInput]);
 
   const handleRegenerateMatrix = () => {
@@ -193,17 +187,18 @@ function Index() {
 
     fd.append("init_method", p.init);
     fd.append("ls_method", p.local);
-    fd.append("start_node", String(p.start));
+    // Parameter pendukung tetap dikirim dengan nilai tetap untuk menjaga kompatibilitas API.
+    fd.append("start_node", "0");
     fd.append("sa_initial_temp", String(p.temp));
     fd.append("sa_alpha", String(p.alpha));
     fd.append("sa_max_iter", String(p.saIter));
     fd.append("ts_tabu_tenure", String(p.tenure));
     fd.append("ts_max_iter", String(p.tsIter));
     fd.append("ils_max_iter", "50");
-    fd.append("multi_start_runs", String(Math.max(1, Math.min(5, p.multiStartRuns))));
-    fd.append("multi_start_seed", String(p.multiStartSeed));
-    fd.append("adaptive_search", String(p.adaptiveSearch));
-    fd.append("early_stop_patience", String(Math.max(0, p.earlyStopPatience)));
+    fd.append("multi_start_runs", "3");
+    fd.append("multi_start_seed", "42");
+    fd.append("adaptive_search", "false");
+    fd.append("early_stop_patience", "0");
 
     try {
       const apiUrl = import.meta.env.DEV
@@ -277,14 +272,7 @@ function Index() {
                     </ul>
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#8DA4BA] mb-1">4. Adaptive Search & Early Stop</h4>
-                    <ul className="list-disc pl-5 space-y-1">
-                      <li><strong>Adaptive Search:</strong> Mengaktifkan reheating SA, diversifikasi TS, dan peningkatan kekuatan perturbasi ILS saat pencarian stagnan.</li>
-                      <li><strong>Early Stop Patience:</strong> Menghentikan satu run ketika tidak ada solusi terbaik baru selama jumlah iterasi yang ditentukan. Nilai 0 menonaktifkan penghentian dini dan menjalankan seluruh budget.</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-[#8DA4BA] mb-1">5. Parameter Tabu Search (TS)</h4>
+                    <h4 className="font-bold text-[#8DA4BA] mb-1">4. Parameter Tabu Search (TS)</h4>
                     <ul className="list-disc pl-5 space-y-1">
                       <li><strong>Tabu Tenure:</strong> Masa berlaku memori (Tabu List). Menentukan berapa iterasi sebuah langkah perbaikan dilarang digunakan kembali.</li>
                     </ul>
@@ -454,62 +442,6 @@ function Index() {
                     </SelectContent>
                   </Select>
                 </Field>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Multi-Start Runs (1–5)">
-                    <Input
-                      type="number"
-                      min={1}
-                      max={5}
-                      value={p.multiStartRuns}
-                      onChange={set("multiStartRuns")}
-                    />
-                  </Field>
-                  <Field label="Multi-Start Seed">
-                    <Input
-                      type="number"
-                      value={p.multiStartSeed}
-                      onChange={set("multiStartSeed")}
-                    />
-                  </Field>
-                </div>
-                <div className="grid grid-cols-2 gap-3 mt-3">
-                  <Field label="Adaptive Search">
-                    <Select
-                      value={p.adaptiveSearch ? "on" : "off"}
-                      onValueChange={(v) => setP({ ...p, adaptiveSearch: v === "on" })}
-                    >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="on">Enabled</SelectItem>
-                        <SelectItem value="off">Disabled (baseline)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field label="Early Stop Patience (0 = off)">
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100000}
-                      value={p.earlyStopPatience}
-                      onChange={set("earlyStopPatience")}
-                    />
-                  </Field>
-                </div>
-                <p className="text-[11px] leading-relaxed text-muted-foreground">
-                  Adaptive Search melakukan reheating/diversifikasi saat pencarian stagnan. Early Stop menghentikan tiap run setelah jumlah iterasi tanpa solusi terbaik baru mencapai nilai patience; 0 berarti seluruh budget iterasi tetap digunakan.
-                </p>
-                <p className="text-[11px] leading-relaxed text-muted-foreground">
-                  Set 1 untuk baseline satu percobaan, atau 2–5 untuk mencoba beberapa rute awal dan mempertahankan solusi terbaik.
-                </p>
-                <Field label="Start Node Index">
-                  <Input
-                    type="number"
-                    min={0}
-                    max={dataMode === "random" ? Math.max(0, numCitiesInput - 1) : undefined}
-                    value={p.start}
-                    onChange={set("start")}
-                  />
-                </Field>
               </TabsContent>
 
               <TabsContent value="sa" className="mt-5 space-y-4">
@@ -637,16 +569,6 @@ function ResultCard({ title, colorCode, r }: { title: string; colorCode: string;
         <CardTitle className="text-3xl font-extrabold text-[#34495E]">{r.best_distance.toLocaleString()}</CardTitle>
         <p className="flex items-center gap-1 text-xs font-medium text-[#8DA4BA]">
           <Clock className="h-3 w-3" />Execution Time: {r.time_seconds.toFixed(4)}s
-        </p>
-        <p className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
-          <Shuffle className="h-3 w-3" />
-          {Number((r as any).num_starts ?? 1)} start(s) · Best run #{Number((r as any).best_run ?? 1)}
-        </p>
-        <p className="text-[11px] font-medium text-muted-foreground">
-          {Number((r as any).total_iterations_completed ?? (r as any).iterations_completed ?? 0)} iterations · {Number((r as any).total_diversification_events ?? (r as any).diversification_events ?? 0)} diversification event(s)
-        </p>
-        <p className="text-[11px] font-medium text-muted-foreground">
-          Best run stop: {String((r as any).stop_reason ?? "max_iter")}
         </p>
       </CardHeader>
       <CardContent>
